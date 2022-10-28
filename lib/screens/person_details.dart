@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sqlfulttercrud/db_helper.dart';
 import 'package:sqlfulttercrud/models/person.dart';
 
 
@@ -12,14 +13,17 @@ class PersonDetails extends StatefulWidget {
 }
 
 class _PersonDetailsState extends State<PersonDetails> {
+  DbHelper helper = DbHelper();
 
   TextEditingController nameController = TextEditingController();
   TextEditingController ageController = TextEditingController();
+  TextEditingController salaryController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     nameController.text = widget.person.name;
     ageController.text = widget.person.age.toString();
+    salaryController.text = widget.person.salary.toString();
 
     return Scaffold(
       backgroundColor: Colors.cyanAccent,
@@ -63,6 +67,17 @@ class _PersonDetailsState extends State<PersonDetails> {
                   ),
                 ),
               ),
+              Padding(
+                padding: const EdgeInsets.only(
+                    top: 15.0, bottom: 15.0, left: 15.0),
+                child: TextField(
+                  controller: salaryController,
+                  decoration: const InputDecoration(
+                    labelText: 'salary',
+                    icon: Icon(Icons.apps_outage_outlined),
+                  ),
+                ),
+              ),
               // Fourth Element
               Padding(
                 padding: const EdgeInsets.all(15.0),
@@ -78,7 +93,11 @@ class _PersonDetailsState extends State<PersonDetails> {
                         ) ,
                         child: const Text( 'Save',textScaleFactor: 1.5,),
                         onPressed: () {
-
+                          Person person = widget.person;
+                          person.name = nameController.text;
+                          person.age = int.parse(ageController.text);
+                          person.salary = double.parse(salaryController.text);
+                          _saveData(person);
                         },
                       ),
                     ),
@@ -95,7 +114,7 @@ class _PersonDetailsState extends State<PersonDetails> {
                         ) ,
                         child: const Text( 'Delete',textScaleFactor: 1.5,),
                         onPressed: () {
-
+                          _deleteData(widget.person);
                         },
                       ),
                     ),
@@ -109,7 +128,31 @@ class _PersonDetailsState extends State<PersonDetails> {
     );
   }
 
+  _saveData(Person person) async {
+    if (person.id == 0) {
+      await helper.insertNewPerson(person);
+    } else {
+      await helper.updatePerson(person);
+    }
+    moveToLastScreen();
+  }
+
+  _deleteData(Person person) async {
+    if (person.id > 0) {
+      await helper.deletePerson(person);
+    }
+    moveToLastScreen();
+  }
+
   void moveToLastScreen(){
     Navigator.pop(context, true);
+  }
+
+  void _showAlertDialog(String title, String message){
+    AlertDialog alertDialog = AlertDialog(
+      title: Text(title),
+      content: Text(message),
+    );
+    showDialog(context:context, builder:(_) => alertDialog);
   }
 }
